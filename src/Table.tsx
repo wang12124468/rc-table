@@ -126,6 +126,7 @@ export interface TableProps<RecordType = unknown> extends LegacyExpandableProps<
   onRow?: GetComponentProps<RecordType>;
   onHeaderRow?: GetComponentProps<ColumnType<RecordType>[]>;
   emptyText?: React.ReactNode | (() => React.ReactNode);
+  scrollbarSize: number;
 
   direction?: 'ltr' | 'rtl';
 
@@ -179,6 +180,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     emptyText,
     onRow,
     onHeaderRow,
+    scrollbarSize: customizeScrollbarSize,
 
     // Internal
     internalHooks,
@@ -193,7 +195,9 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
   const [scrollbarSize, setScrollbarSize] = React.useState(0);
 
   React.useEffect(() => {
-    setScrollbarSize(getScrollBarSize());
+    setScrollbarSize(
+      typeof customizeScrollbarSize !== 'undefined' ? customizeScrollbarSize : getScrollBarSize(),
+    );
   });
 
   // ===================== Warning ======================
