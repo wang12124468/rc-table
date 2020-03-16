@@ -492,13 +492,15 @@ function Table(props) {
     }
 
     groupTableNode = React.createElement(React.Fragment, null, showHeader !== false && React.createElement("div", {
-      style: _objectSpread({}, scrollTableStyle, {
+      style: {
         overflow: 'hidden'
-      }),
+      },
       onScroll: onScroll,
       ref: scrollHeaderRef,
       className: classNames("".concat(prefixCls, "-header"))
-    }, React.createElement(FixedHeader, Object.assign({}, headerProps, columnContext, {
+    }, React.createElement(FixedHeader, Object.assign({
+      wrapperStyle: _objectSpread({}, scrollTableStyle)
+    }, headerProps, columnContext, {
       direction: direction
     }))), bodyContent);
   } else {

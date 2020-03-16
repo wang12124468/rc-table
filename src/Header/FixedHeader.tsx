@@ -8,6 +8,7 @@ export interface FixedHeaderProps<RecordType> extends HeaderProps<RecordType> {
   colWidths: number[];
   columCount: number;
   direction: 'ltr' | 'rtl';
+  wrapperStyle: React.CSSProperties;
 }
 
 function FixedHeader<RecordType>({
@@ -17,6 +18,7 @@ function FixedHeader<RecordType>({
   columCount,
   stickyOffsets,
   direction,
+  wrapperStyle,
   ...props
 }: FixedHeaderProps<RecordType>) {
   const { prefixCls, scrollbarSize } = React.useContext(TableContext);
@@ -62,7 +64,13 @@ function FixedHeader<RecordType>({
   const columnWidthsReady = !colWidths.every(width => !width);
 
   return (
-    <table style={{ tableLayout: 'fixed', visibility: columnWidthsReady ? null : 'hidden' }}>
+    <table
+      style={{
+        tableLayout: 'fixed',
+        visibility: columnWidthsReady ? null : 'hidden',
+        ...wrapperStyle,
+      }}
+    >
       <ColGroup
         colWidths={scrollbarSize ? [...colWidths, scrollbarSize] : colWidths}
         columCount={scrollbarSize ? columCount + 1 : columCount}

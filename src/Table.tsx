@@ -584,14 +584,18 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
         {showHeader !== false && (
           <div
             style={{
-              ...scrollTableStyle,
               overflow: 'hidden',
             }}
             onScroll={onScroll}
             ref={scrollHeaderRef}
             className={classNames(`${prefixCls}-header`)}
           >
-            <FixedHeader {...headerProps} {...columnContext} direction={direction} />
+            <FixedHeader
+              wrapperStyle={{ ...scrollTableStyle }}
+              {...headerProps}
+              {...columnContext}
+              direction={direction}
+            />
           </div>
         )}
 

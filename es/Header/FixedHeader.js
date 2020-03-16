@@ -28,7 +28,8 @@ function FixedHeader(_ref) {
       columCount = _ref.columCount,
       stickyOffsets = _ref.stickyOffsets,
       direction = _ref.direction,
-      props = _objectWithoutProperties(_ref, ["columns", "flattenColumns", "colWidths", "columCount", "stickyOffsets", "direction"]);
+      wrapperStyle = _ref.wrapperStyle,
+      props = _objectWithoutProperties(_ref, ["columns", "flattenColumns", "colWidths", "columCount", "stickyOffsets", "direction", "wrapperStyle"]);
 
   var _React$useContext = React.useContext(TableContext),
       prefixCls = _React$useContext.prefixCls,
@@ -77,10 +78,10 @@ function FixedHeader(_ref) {
     return !width;
   });
   return React.createElement("table", {
-    style: {
+    style: _objectSpread({
       tableLayout: 'fixed',
       visibility: columnWidthsReady ? null : 'hidden'
-    }
+    }, wrapperStyle)
   }, React.createElement(ColGroup, {
     colWidths: scrollbarSize ? [].concat(_toConsumableArray(colWidths), [scrollbarSize]) : colWidths,
     columCount: scrollbarSize ? columCount + 1 : columCount
