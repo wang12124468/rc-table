@@ -483,7 +483,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
 
   // Header props
   const headerProps = {
-    colWidths,
+    colWidths: flattenColumns.map(({ width }) => width as number),
     columCount: flattenColumns.length,
     stickyOffsets,
     onHeaderRow,
@@ -505,7 +505,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
   const bodyTable = (
     <Body
       data={mergedData}
-      measureColumnWidth={fixHeader || fixColumn}
+      measureColumnWidth={/* fixHeader || fixColumn */ false}
       stickyOffsets={stickyOffsets}
       expandedKeys={mergedExpandedKeys}
       rowExpandable={rowExpandable}
@@ -584,6 +584,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
         {showHeader !== false && (
           <div
             style={{
+              ...scrollTableStyle,
               overflow: 'hidden',
             }}
             onScroll={onScroll}
@@ -697,7 +698,10 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     ],
   );
 
-  const ResizeContextValue = React.useMemo(() => ({ onColumnResize }), [onColumnResize]);
+  const ResizeContextValue = React.useMemo(() => ({ onColumnResize }), [
+    onColumnResize,
+    transformColumns,
+  ]);
 
   return (
     <TableContext.Provider value={TableContextValue}>

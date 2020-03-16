@@ -410,7 +410,10 @@ function Table(props) {
   var groupTableNode; // Header props
 
   var headerProps = {
-    colWidths: colWidths,
+    colWidths: flattenColumns.map(function (_ref5) {
+      var width = _ref5.width;
+      return width;
+    }),
     columCount: flattenColumns.length,
     stickyOffsets: stickyOffsets,
     onHeaderRow: onHeaderRow
@@ -430,7 +433,9 @@ function Table(props) {
 
   var bodyTable = React.createElement(Body, {
     data: mergedData,
-    measureColumnWidth: fixHeader || fixColumn,
+    measureColumnWidth:
+    /* fixHeader || fixColumn */
+    false,
     stickyOffsets: stickyOffsets,
     expandedKeys: mergedExpandedKeys,
     rowExpandable: rowExpandable,
@@ -440,8 +445,8 @@ function Table(props) {
     childrenColumnName: mergedChildrenColumnName
   });
   var bodyColGroup = React.createElement(ColGroup, {
-    colWidths: flattenColumns.map(function (_ref5) {
-      var width = _ref5.width;
+    colWidths: flattenColumns.map(function (_ref6) {
+      var width = _ref6.width;
       return width;
     }),
     columns: flattenColumns
@@ -462,8 +467,8 @@ function Table(props) {
         ref: scrollBodyRef,
         onScroll: onScroll
       });
-      headerProps.colWidths = flattenColumns.map(function (_ref6, index) {
-        var width = _ref6.width;
+      headerProps.colWidths = flattenColumns.map(function (_ref7, index) {
+        var width = _ref7.width;
         var colWidth = index === columns.length - 1 ? width - scrollbarSize : width;
 
         if (typeof colWidth === 'number' && !Number.isNaN(colWidth)) {
@@ -487,9 +492,9 @@ function Table(props) {
     }
 
     groupTableNode = React.createElement(React.Fragment, null, showHeader !== false && React.createElement("div", {
-      style: {
+      style: _objectSpread({}, scrollTableStyle, {
         overflow: 'hidden'
-      },
+      }),
       onScroll: onScroll,
       ref: scrollHeaderRef,
       className: classNames("".concat(prefixCls, "-header"))
@@ -562,7 +567,7 @@ function Table(props) {
     return {
       onColumnResize: onColumnResize
     };
-  }, [onColumnResize]);
+  }, [onColumnResize, transformColumns]);
   return React.createElement(TableContext.Provider, {
     value: TableContextValue
   }, React.createElement(BodyContext.Provider, {

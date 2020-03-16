@@ -42,7 +42,12 @@ function FixedHeader<RecordType>({
 
   // Calculate the sticky offsets
   const headerStickyOffsets = React.useMemo(() => {
+    if (!scrollbarSize) {
+      return { ...stickyOffsets };
+    }
+
     const { right, left } = stickyOffsets;
+
     return {
       ...stickyOffsets,
       left: direction === 'rtl' ? [...left.map(width => width + scrollbarSize), 0] : left,
@@ -58,7 +63,10 @@ function FixedHeader<RecordType>({
 
   return (
     <table style={{ tableLayout: 'fixed', visibility: columnWidthsReady ? null : 'hidden' }}>
-      <ColGroup colWidths={[...colWidths, scrollbarSize]} columCount={columCount + 1} />
+      <ColGroup
+        colWidths={scrollbarSize ? [...colWidths, scrollbarSize] : colWidths}
+        columCount={scrollbarSize ? columCount + 1 : columCount}
+      />
       <Header
         {...props}
         stickyOffsets={headerStickyOffsets}

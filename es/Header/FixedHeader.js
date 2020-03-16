@@ -52,6 +52,10 @@ function FixedHeader(_ref) {
   }, [scrollbarSize, flattenColumns]); // Calculate the sticky offsets
 
   var headerStickyOffsets = React.useMemo(function () {
+    if (!scrollbarSize) {
+      return _objectSpread({}, stickyOffsets);
+    }
+
     var right = stickyOffsets.right,
         left = stickyOffsets.left;
     return _objectSpread({}, stickyOffsets, {
@@ -78,8 +82,8 @@ function FixedHeader(_ref) {
       visibility: columnWidthsReady ? null : 'hidden'
     }
   }, React.createElement(ColGroup, {
-    colWidths: [].concat(_toConsumableArray(colWidths), [scrollbarSize]),
-    columCount: columCount + 1
+    colWidths: scrollbarSize ? [].concat(_toConsumableArray(colWidths), [scrollbarSize]) : colWidths,
+    columCount: scrollbarSize ? columCount + 1 : columCount
   }), React.createElement(Header, Object.assign({}, props, {
     stickyOffsets: headerStickyOffsets,
     columns: columnsWithScrollbar,
