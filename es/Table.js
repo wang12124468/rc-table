@@ -506,9 +506,9 @@ function Table(props) {
   } else {
     groupTableNode = React.createElement("div", {
       style: _objectSpread({}, scrollXStyle, {}, scrollYStyle),
-      className: classNames("".concat(prefixCls, "-content")),
       onScroll: onScroll,
-      ref: scrollBodyRef
+      ref: scrollBodyRef,
+      className: classNames("".concat(prefixCls, "-body"))
     }, React.createElement(TableComponent, {
       style: _objectSpread({}, scrollTableStyle, {
         tableLayout: mergedTableLayout

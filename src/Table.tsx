@@ -610,9 +610,9 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
           ...scrollXStyle,
           ...scrollYStyle,
         }}
-        className={classNames(`${prefixCls}-content`)}
         onScroll={onScroll}
         ref={scrollBodyRef}
+        className={classNames(`${prefixCls}-body`)}
       >
         <TableComponent style={{ ...scrollTableStyle, tableLayout: mergedTableLayout }}>
           {bodyColGroup}
