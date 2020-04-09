@@ -287,7 +287,7 @@ function Table(props) {
     return colsWidths.get(columnKey);
   });
   var stickyOffsets = useStickyOffsets(colWidths, flattenColumns.length, direction);
-  var fixHeader = hasData && scroll && validateValue(scroll.y);
+  var fixHeader = scroll && validateValue(scroll.y);
   var fixColumn = scroll && validateValue(scroll.x);
   var scrollXStyle;
   var scrollYStyle;
@@ -508,7 +508,7 @@ function Table(props) {
       style: _objectSpread({}, scrollXStyle, {}, scrollYStyle),
       onScroll: onScroll,
       ref: scrollBodyRef,
-      className: classNames("".concat(prefixCls, "-body"))
+      className: classNames("".concat(prefixCls, "-content"))
     }, React.createElement(TableComponent, {
       style: _objectSpread({}, scrollTableStyle, {
         tableLayout: mergedTableLayout

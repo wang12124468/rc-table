@@ -371,7 +371,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
   const colsKeys = getColumnsKey(flattenColumns);
   const colWidths = colsKeys.map(columnKey => colsWidths.get(columnKey));
   const stickyOffsets = useStickyOffsets(colWidths, flattenColumns.length, direction);
-  const fixHeader = hasData && scroll && validateValue(scroll.y);
+  const fixHeader = scroll && validateValue(scroll.y);
   const fixColumn = scroll && validateValue(scroll.x);
 
   let scrollXStyle: React.CSSProperties;
@@ -612,7 +612,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
         }}
         onScroll={onScroll}
         ref={scrollBodyRef}
-        className={classNames(`${prefixCls}-body`)}
+        className={classNames(`${prefixCls}-content`)}
       >
         <TableComponent style={{ ...scrollTableStyle, tableLayout: mergedTableLayout }}>
           {bodyColGroup}
