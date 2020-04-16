@@ -48,7 +48,8 @@ function Cell(_ref, ref) {
       _ref$additionalProps = _ref.additionalProps,
       additionalProps = _ref$additionalProps === void 0 ? {} : _ref$additionalProps,
       ellipsis = _ref.ellipsis,
-      align = _ref.align;
+      align = _ref.align,
+      stickyOffset = _ref.stickyOffset;
   var cellPrefixCls = "".concat(prefixCls, "-cell"); // ==================== Child Node ====================
 
   var cellProps;
@@ -104,12 +105,12 @@ function Cell(_ref, ref) {
 
   if (isFixLeft) {
     fixedStyle.position = 'sticky';
-    fixedStyle.left = fixLeft;
+    fixedStyle.left = fixLeft + (stickyOffset || 0);
   }
 
   if (isFixRight) {
     fixedStyle.position = 'sticky';
-    fixedStyle.right = fixRight;
+    fixedStyle.right = fixRight + (stickyOffset || 0);
   } // ====================== Align =======================
 
 

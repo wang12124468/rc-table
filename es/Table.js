@@ -108,6 +108,7 @@ function Table(props) {
       onRow = props.onRow,
       onHeaderRow = props.onHeaderRow,
       customizeScrollbarSize = props.scrollbarSize,
+      customizeGetScrollLeft = props.getScrollLeft,
       internalHooks = props.internalHooks,
       transformColumns = props.transformColumns,
       internalRefs = props.internalRefs;
@@ -279,7 +280,12 @@ function Table(props) {
   var _useFrameState = useFrameState(new Map()),
       _useFrameState2 = _slicedToArray(_useFrameState, 2),
       colsWidths = _useFrameState2[0],
-      updateColsWidths = _useFrameState2[1]; // Convert map to number width
+      updateColsWidths = _useFrameState2[1];
+
+  var _React$useState11 = React.useState(0),
+      _React$useState12 = _slicedToArray(_React$useState11, 2),
+      stickyOffset = _React$useState12[0],
+      setStickyOffset = _React$useState12[1]; // Convert map to number width
 
 
   var colsKeys = getColumnsKey(flattenColumns);
@@ -344,13 +350,28 @@ function Table(props) {
   var onScroll = function onScroll(_ref2) {
     var currentTarget = _ref2.currentTarget,
         scrollLeft = _ref2.scrollLeft;
-    var mergedScrollLeft = typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft;
+    var mergedScrollLeft = 0; // eslint-disable-next-line no-underscore-dangle
+
+    var _stickyOffset = 0;
+
+    if (customizeGetScrollLeft) {
+      mergedScrollLeft = customizeGetScrollLeft(currentTarget);
+      _stickyOffset = -mergedScrollLeft;
+    } else {
+      mergedScrollLeft = typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft;
+    }
+
+    if (_stickyOffset !== stickyOffset) {
+      setStickyOffset(_stickyOffset);
+    } // // eslint-disable-next-line no-nested-ternary
+    // const mergedScrollLeft = customizeGetScrollLeft ? customizeGetScrollLeft(currentTarget) : (typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft);
+
+
     var compareTarget = currentTarget || EMPTY_SCROLL_TARGET;
 
     if (!getScrollTarget() || getScrollTarget() === compareTarget) {
       setScrollTarget(compareTarget);
-      forceScroll(mergedScrollLeft, scrollHeaderRef.current);
-      forceScroll(mergedScrollLeft, scrollBodyRef.current);
+      forceScroll(mergedScrollLeft, scrollHeaderRef.current); // forceScroll(mergedScrollLeft, scrollBodyRef.current);
     }
 
     if (currentTarget) {
@@ -562,9 +583,10 @@ function Table(props) {
       expandedRowRender: expandedRowRender,
       onTriggerExpand: onTriggerExpand,
       expandIconColumnIndex: expandIconColumnIndex,
-      indentSize: indentSize
+      indentSize: indentSize,
+      stickyOffset: stickyOffset
     });
-  }, [columnContext, mergedTableLayout, rowClassName, expandedRowClassName, componentWidth, fixHeader, fixColumn, mergedExpandIcon, expandableType, expandRowByClick, expandedRowRender, onTriggerExpand, expandIconColumnIndex, indentSize]);
+  }, [stickyOffset, columnContext, mergedTableLayout, rowClassName, expandedRowClassName, componentWidth, fixHeader, fixColumn, mergedExpandIcon, expandableType, expandRowByClick, expandedRowRender, onTriggerExpand, expandIconColumnIndex, indentSize]);
   var ResizeContextValue = React.useMemo(function () {
     return {
       onColumnResize: onColumnResize

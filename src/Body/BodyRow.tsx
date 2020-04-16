@@ -64,6 +64,7 @@ function BodyRow<RecordType extends { children?: RecordType[] }>(props: BodyRowP
     expandIcon,
     expandedRowRender,
     expandIconColumnIndex,
+    stickyOffset,
   } = React.useContext(BodyContext);
   const [expandRended, setExpandRended] = React.useState(false);
 
@@ -171,6 +172,7 @@ function BodyRow<RecordType extends { children?: RecordType[] }>(props: BodyRowP
             index={index}
             dataIndex={dataIndex}
             render={render}
+            stickyOffset={stickyOffset}
             {...fixedInfo}
             appendNode={appendCellNode}
             additionalProps={additionalCellProps}

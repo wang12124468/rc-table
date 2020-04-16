@@ -53,6 +53,7 @@ export interface CellProps<RecordType extends DefaultRecordType> {
   /** @private Used for `expandable` with nest tree */
   appendNode?: React.ReactNode;
   additionalProps?: React.HTMLAttributes<HTMLElement>;
+  stickyOffset?;
 }
 
 function Cell<RecordType extends DefaultRecordType>(
@@ -77,6 +78,7 @@ function Cell<RecordType extends DefaultRecordType>(
     additionalProps = {},
     ellipsis,
     align,
+    stickyOffset,
   }: CellProps<RecordType>,
   ref: React.Ref<any>,
 ): React.ReactElement {
@@ -134,12 +136,12 @@ function Cell<RecordType extends DefaultRecordType>(
 
   if (isFixLeft) {
     fixedStyle.position = 'sticky';
-    fixedStyle.left = fixLeft as number;
+    fixedStyle.left = (fixLeft + (stickyOffset || 0)) as number;
   }
   if (isFixRight) {
     fixedStyle.position = 'sticky';
 
-    fixedStyle.right = fixRight as number;
+    fixedStyle.right = (fixRight + (stickyOffset || 0)) as number;
   }
 
   // ====================== Align =======================

@@ -16,6 +16,7 @@ export interface BodyContextProps<RecordType = DefaultRecordType> {
     expandIcon: RenderExpandIcon<RecordType>;
     onTriggerExpand: TriggerEventHandler<RecordType>;
     expandIconColumnIndex: number;
+    stickyOffset: any;
 }
 declare const BodyContext: React.Context<BodyContextProps<Record<string, any>>>;
 export default BodyContext;

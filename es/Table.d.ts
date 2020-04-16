@@ -53,6 +53,7 @@ export interface TableProps<RecordType = unknown> extends LegacyExpandableProps<
     onHeaderRow?: GetComponentProps<ColumnType<RecordType>[]>;
     emptyText?: React.ReactNode | (() => React.ReactNode);
     scrollbarSize: number;
+    getScrollLeft: any;
     direction?: 'ltr' | 'rtl';
     /**
      * @private Internal usage, may remove by refactor. Should always use `columns` instead.

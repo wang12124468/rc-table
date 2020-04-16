@@ -128,6 +128,8 @@ export interface TableProps<RecordType = unknown> extends LegacyExpandableProps<
   emptyText?: React.ReactNode | (() => React.ReactNode);
   scrollbarSize: number;
 
+  getScrollLeft;
+
   direction?: 'ltr' | 'rtl';
 
   // =================================== Internal ===================================
@@ -181,6 +183,8 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     onRow,
     onHeaderRow,
     scrollbarSize: customizeScrollbarSize,
+
+    getScrollLeft: customizeGetScrollLeft,
 
     // Internal
     internalHooks,
@@ -367,6 +371,8 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
   const [pingedRight, setPingedRight] = React.useState(false);
   const [colsWidths, updateColsWidths] = useFrameState(new Map<React.Key, number>());
 
+  const [stickyOffset, setStickyOffset] = React.useState(0);
+
   // Convert map to number width
   const colsKeys = getColumnsKey(flattenColumns);
   const colWidths = colsKeys.map(columnKey => colsWidths.get(columnKey));
@@ -421,14 +427,30 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     currentTarget,
     scrollLeft,
   }: React.UIEvent<HTMLDivElement> & { scrollLeft?: number }) => {
-    const mergedScrollLeft = typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft;
+    let mergedScrollLeft = 0;
+    // eslint-disable-next-line no-underscore-dangle
+    let _stickyOffset = 0;
+
+    if (customizeGetScrollLeft) {
+      mergedScrollLeft = customizeGetScrollLeft(currentTarget);
+      _stickyOffset = -mergedScrollLeft;
+    } else {
+      mergedScrollLeft = typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft;
+    }
+
+    if (_stickyOffset !== stickyOffset) {
+      setStickyOffset(_stickyOffset);
+    }
+
+    // // eslint-disable-next-line no-nested-ternary
+    // const mergedScrollLeft = customizeGetScrollLeft ? customizeGetScrollLeft(currentTarget) : (typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft);
 
     const compareTarget = currentTarget || EMPTY_SCROLL_TARGET;
     if (!getScrollTarget() || getScrollTarget() === compareTarget) {
       setScrollTarget(compareTarget);
 
       forceScroll(mergedScrollLeft, scrollHeaderRef.current);
-      forceScroll(mergedScrollLeft, scrollBodyRef.current);
+      // forceScroll(mergedScrollLeft, scrollBodyRef.current);
     }
 
     if (currentTarget) {
@@ -683,8 +705,10 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       onTriggerExpand,
       expandIconColumnIndex,
       indentSize,
+      stickyOffset,
     }),
     [
+      stickyOffset,
       columnContext,
       mergedTableLayout,
       rowClassName,
