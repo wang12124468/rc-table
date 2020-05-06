@@ -61,13 +61,13 @@ function FixedHeader<RecordType>({
   for (let i = 0; i < columCount; i += 1) {
     cloneWidths[i] = colWidths[i];
   }
-  const columnWidthsReady = !colWidths.every(width => !width);
+  // const columnWidthsReady = !colWidths.every(width => !width);
 
   return (
     <table
       style={{
         tableLayout: 'fixed',
-        visibility: columnWidthsReady ? null : 'hidden',
+        // visibility: columnWidthsReady ? null : 'hidden',
         ...wrapperStyle,
       }}
     >
