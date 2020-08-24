@@ -74,6 +74,7 @@ function FixedHeader<RecordType>({
       <ColGroup
         colWidths={scrollbarSize ? [...colWidths, scrollbarSize] : colWidths}
         columCount={scrollbarSize ? columCount + 1 : columCount}
+        columns={flattenColumnsWithScrollbar}
       />
       <Header
         {...props}

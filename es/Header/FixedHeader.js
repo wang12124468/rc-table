@@ -85,7 +85,8 @@ function FixedHeader(_ref) {
     }, wrapperStyle)
   }, React.createElement(ColGroup, {
     colWidths: scrollbarSize ? [].concat(_toConsumableArray(colWidths), [scrollbarSize]) : colWidths,
-    columCount: scrollbarSize ? columCount + 1 : columCount
+    columCount: scrollbarSize ? columCount + 1 : columCount,
+    columns: flattenColumnsWithScrollbar
   }), React.createElement(Header, Object.assign({}, props, {
     stickyOffsets: headerStickyOffsets,
     columns: columnsWithScrollbar,
