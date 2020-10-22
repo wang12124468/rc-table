@@ -9,6 +9,7 @@ import {
   GetRowKey,
   TriggerEventHandler,
   RenderExpandIcon,
+  ColumnGroupType,
 } from '../interface';
 import { INTERNAL_COL_DEFINE } from '../utils/legacyUtil';
 
@@ -39,10 +40,11 @@ function flatColumns<RecordType>(columns: ColumnsType<RecordType>): ColumnType<R
     // Convert `fixed='true'` to `fixed='left'` instead
     const parsedFixed = fixed === true ? 'left' : fixed;
 
-    if ('children' in column) {
+    const subColumns = (column as ColumnGroupType<RecordType>).children;
+    if (subColumns && subColumns.length > 0) {
       return [
         ...list,
-        ...flatColumns(column.children).map(subColum => ({
+        ...flatColumns(subColumns).map(subColum => ({
           fixed: parsedFixed,
           ...subColum,
         })),
@@ -116,6 +118,7 @@ function useColumns<RecordType>(
     rowExpandable,
     expandIconColumnIndex,
     direction,
+    expandRowByClick,
   }: {
     prefixCls?: string;
     columns?: ColumnsType<RecordType>;
@@ -128,6 +131,7 @@ function useColumns<RecordType>(
     rowExpandable?: (record: RecordType) => boolean;
     expandIconColumnIndex?: number;
     direction?: 'ltr' | 'rtl';
+    expandRowByClick?: boolean;
   },
   transformColumns: (columns: ColumnsType<RecordType>) => ColumnsType<RecordType>,
 ): [ColumnsType<RecordType>, ColumnType<RecordType>[]] {
@@ -154,13 +158,18 @@ function useColumns<RecordType>(
           const expanded = expandedKeys.has(rowKey);
           const recordExpandable = rowExpandable ? rowExpandable(record) : true;
 
-          return expandIcon({
+          const icon = expandIcon({
             prefixCls,
             expanded,
             expandable: recordExpandable,
             record,
             onExpand: onTriggerExpand,
           });
+
+          if (expandRowByClick) {
+            return <span onClick={e => e.stopPropagation()}>{icon}</span>;
+          }
+          return icon;
         },
       };
 

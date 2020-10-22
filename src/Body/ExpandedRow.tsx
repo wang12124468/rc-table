@@ -9,6 +9,7 @@ export interface ExpandedRowProps<RecordType> {
   cellComponent: CustomizeComponent;
   fixHeader: boolean;
   fixColumn: boolean;
+  horizonScroll: boolean;
   componentWidth: number;
   className: string;
   expanded: boolean;
@@ -23,6 +24,7 @@ function ExpandedRow<RecordType>({
   cellComponent,
   fixHeader,
   fixColumn,
+  horizonScroll,
   className,
   expanded,
   componentWidth,
@@ -66,7 +68,7 @@ function ExpandedRow<RecordType>({
     children,
     Component,
     fixHeader,
-    fixColumn,
+    horizonScroll,
     className,
     expanded,
     componentWidth,

@@ -2,7 +2,7 @@ import * as React from 'react';
 import ResizeObserver from 'rc-resize-observer';
 import BodyRow from './BodyRow';
 import TableContext from '../context/TableContext';
-import { GetRowKey, StickyOffsets, Key, GetComponentProps } from '../interface';
+import { GetRowKey, Key, GetComponentProps } from '../interface';
 import ExpandedRow from './ExpandedRow';
 import BodyContext from '../context/BodyContext';
 import { getColumnsKey } from '../utils/valueUtil';
@@ -12,7 +12,6 @@ export interface BodyProps<RecordType> {
   data: RecordType[];
   getRowKey: GetRowKey<RecordType>;
   measureColumnWidth: boolean;
-  stickyOffsets: StickyOffsets;
   expandedKeys: Set<Key>;
   onRow: GetComponentProps<RecordType>;
   rowExpandable: (record: RecordType) => boolean;
@@ -24,7 +23,6 @@ function Body<RecordType>({
   data,
   getRowKey,
   measureColumnWidth,
-  stickyOffsets,
   expandedKeys,
   onRow,
   rowExpandable,
@@ -33,7 +31,9 @@ function Body<RecordType>({
 }: BodyProps<RecordType>) {
   const { onColumnResize } = React.useContext(ResizeContext);
   const { prefixCls, getComponent } = React.useContext(TableContext);
-  const { fixHeader, fixColumn, flattenColumns, componentWidth } = React.useContext(BodyContext);
+  const { fixHeader, horizonScroll, flattenColumns, componentWidth } = React.useContext(
+    BodyContext,
+  );
 
   return React.useMemo(() => {
     const WrapperComponent = getComponent(['body', 'wrapper'], 'tbody');
@@ -54,7 +54,6 @@ function Body<RecordType>({
             index={index}
             rowComponent={trComponent}
             cellComponent={tdComponent}
-            stickyOffsets={stickyOffsets}
             expandedKeys={expandedKeys}
             onRow={onRow}
             getRowKey={getRowKey}
@@ -70,7 +69,8 @@ function Body<RecordType>({
           className={`${prefixCls}-placeholder`}
           prefixCls={prefixCls}
           fixHeader={fixHeader}
-          fixColumn={fixColumn}
+          fixColumn={horizonScroll}
+          horizonScroll={horizonScroll}
           component={trComponent}
           componentWidth={componentWidth}
           cellComponent={tdComponent}
@@ -87,12 +87,12 @@ function Body<RecordType>({
       <WrapperComponent className={`${prefixCls}-tbody`}>
         {/* Measure body column width with additional hidden col */}
         {measureColumnWidth && (
-          <tr aria-hidden="true" className={`${prefixCls}-measure-row`}>
+          <tr aria-hidden="true" className={`${prefixCls}-measure-row`} style={{ height: 0 }}>
             {columnsKey.map(columnKey => (
               <ResizeObserver
                 key={columnKey}
-                onResize={({ width }) => {
-                  onColumnResize(columnKey, width);
+                onResize={({ offsetWidth }) => {
+                  onColumnResize(columnKey, offsetWidth);
                 }}
               >
                 <td style={{ padding: 0, border: 0, height: 0 }} />
@@ -107,12 +107,13 @@ function Body<RecordType>({
   }, [
     data,
     prefixCls,
+    onRow,
     measureColumnWidth,
-    stickyOffsets,
     expandedKeys,
     getRowKey,
     getComponent,
     componentWidth,
+    emptyNode,
   ]);
 }
 

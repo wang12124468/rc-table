@@ -64,8 +64,9 @@ import useStickyOffsets from './hooks/useStickyOffsets';
 import ColGroup from './ColGroup';
 import { getExpandableProps, getDataAndAriaProps } from './utils/legacyUtil';
 import Panel from './Panel';
-import Footer from './Footer';
+import Footer, { FooterComponents } from './Footer';
 import { findAllChildrenKeys, renderExpandIcon } from './utils/expandUtil';
+import { getCellFixedInfo } from './utils/fixUtil';
 
 // Used for conditions cache
 const EMPTY_DATA = [];
@@ -81,6 +82,7 @@ interface MemoTableContentProps {
   pingRight: boolean;
   props: any;
 }
+
 const MemoTableContent = React.memo<MemoTableContentProps>(
   ({ children }) => children as React.ReactElement,
 
@@ -240,7 +242,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       return rowKey;
     }
     return (record: RecordType) => {
-      const key = record[rowKey];
+      const key = record && record[rowKey];
 
       if (process.env.NODE_ENV !== 'production') {
         warning(
@@ -291,7 +293,9 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       (props.expandable &&
         internalHooks === INTERNAL_HOOKS &&
         (props.expandable as any).__PARENT_RENDER_ICON__) ||
-      mergedData.some(record => mergedChildrenColumnName in record)
+      mergedData.some(
+        record => record && typeof record === 'object' && mergedChildrenColumnName in record,
+      )
     ) {
       return 'nest';
     }
@@ -347,6 +351,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       expandable: !!expandedRowRender,
       expandedKeys: mergedExpandedKeys,
       getRowKey,
+      // https://github.com/ant-design/ant-design/issues/23894
       onTriggerExpand,
       expandIcon: mergedExpandIcon,
       expandIconColumnIndex,
@@ -375,10 +380,12 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
 
   // Convert map to number width
   const colsKeys = getColumnsKey(flattenColumns);
-  const colWidths = colsKeys.map(columnKey => colsWidths.get(columnKey));
+  const pureColWidths = colsKeys.map(columnKey => colsWidths.get(columnKey));
+  const colWidths = React.useMemo(() => pureColWidths, [pureColWidths.join('_')]);
   const stickyOffsets = useStickyOffsets(colWidths, flattenColumns.length, direction);
   const fixHeader = scroll && validateValue(scroll.y);
-  const fixColumn = scroll && validateValue(scroll.x);
+  const horizonScroll = scroll && validateValue(scroll.x);
+  const fixColumn = horizonScroll && flattenColumns.some(({ fixed }) => fixed);
 
   let scrollXStyle: React.CSSProperties;
   let scrollYStyle: React.CSSProperties;
@@ -391,7 +398,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     };
   }
 
-  if (fixColumn) {
+  if (horizonScroll) {
     scrollXStyle = { overflowX: 'scroll' };
     // When no vertical scrollbar, should hide it
     // https://github.com/ant-design/ant-design/pull/20705
@@ -442,8 +449,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       setStickyOffset(_stickyOffset);
     }
 
-    // // eslint-disable-next-line no-nested-ternary
-    // const mergedScrollLeft = customizeGetScrollLeft ? customizeGetScrollLeft(currentTarget) : (typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft);
+    // const mergedScrollLeft = typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft;
 
     const compareTarget = currentTarget || EMPTY_SCROLL_TARGET;
     if (!getScrollTarget() || getScrollTarget() === compareTarget) {
@@ -471,13 +477,13 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     setComponentWidth(fullTableRef.current ? fullTableRef.current.offsetWidth : width);
   };
 
-  // Sync scroll bar when init or `fixColumn` changed
+  // Sync scroll bar when init or `horizonScroll` changed
   React.useEffect(() => triggerOnScroll, []);
   React.useEffect(() => {
-    if (fixColumn) {
+    if (horizonScroll) {
       triggerOnScroll();
     }
-  }, [fixColumn]);
+  }, [horizonScroll]);
 
   // ================== INTERNAL HOOKS ==================
   React.useEffect(() => {
@@ -494,7 +500,6 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     if (tableLayout) {
       return tableLayout;
     }
-
     if (fixHeader || fixColumn || flattenColumns.some(({ ellipsis }) => ellipsis)) {
       return 'fixed';
     }
@@ -527,8 +532,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
   const bodyTable = (
     <Body
       data={mergedData}
-      measureColumnWidth={/* fixHeader || fixColumn */ false}
-      stickyOffsets={stickyOffsets}
+      measureColumnWidth={fixHeader || horizonScroll}
       expandedKeys={mergedExpandedKeys}
       rowExpandable={rowExpandable}
       getRowKey={getRowKey}
@@ -632,9 +636,9 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
           ...scrollXStyle,
           ...scrollYStyle,
         }}
+        className={classNames(`${prefixCls}-content`)}
         onScroll={onScroll}
         ref={scrollBodyRef}
-        className={classNames(`${prefixCls}-content`)}
       >
         <TableComponent style={{ ...scrollTableStyle, tableLayout: mergedTableLayout }}>
           {bodyColGroup}
@@ -656,7 +660,9 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
         [`${prefixCls}-ping-right`]: pingedRight,
         [`${prefixCls}-layout-fixed`]: tableLayout === 'fixed',
         [`${prefixCls}-fixed-header`]: fixHeader,
+        /** No used but for compatible */
         [`${prefixCls}-fixed-column`]: fixColumn,
+        [`${prefixCls}-scroll-horizontal`]: horizonScroll,
         [`${prefixCls}-has-fix-left`]: flattenColumns[0] && flattenColumns[0].fixed,
         [`${prefixCls}-has-fix-right`]:
           flattenColumns[flattenColumns.length - 1] &&
@@ -667,7 +673,11 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       ref={fullTableRef}
       {...ariaProps}
     >
-      <MemoTableContent pingLeft={pingedLeft} pingRight={pingedRight} props={props}>
+      <MemoTableContent
+        pingLeft={pingedLeft}
+        pingRight={pingedRight}
+        props={{ ...props, stickyOffsets, mergedExpandedKeys }}
+      >
         {title && <Panel className={`${prefixCls}-title`}>{title(mergedData)}</Panel>}
         <div className={`${prefixCls}-container`}>{groupTableNode}</div>
         {footer && <Panel className={`${prefixCls}-footer`}>{footer(mergedData)}</Panel>}
@@ -675,7 +685,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     </div>
   );
 
-  if (fixColumn) {
+  if (horizonScroll) {
     fullTable = <ResizeObserver onResize={onFullTableResize}>{fullTable}</ResizeObserver>;
   }
 
@@ -685,8 +695,11 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       getComponent,
       scrollbarSize,
       direction,
+      fixedInfoList: flattenColumns.map((_, colIndex) =>
+        getCellFixedInfo(colIndex, colIndex, flattenColumns, stickyOffsets, direction),
+      ),
     }),
-    [prefixCls, getComponent, scrollbarSize, direction],
+    [prefixCls, getComponent, scrollbarSize, direction, flattenColumns, stickyOffsets, direction],
   );
 
   const BodyContextValue = React.useMemo(
@@ -698,6 +711,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       componentWidth,
       fixHeader,
       fixColumn,
+      horizonScroll,
       expandIcon: mergedExpandIcon,
       expandableType,
       expandRowByClick,
@@ -705,10 +719,8 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       onTriggerExpand,
       expandIconColumnIndex,
       indentSize,
-      stickyOffset,
     }),
     [
-      stickyOffset,
       columnContext,
       mergedTableLayout,
       rowClassName,
@@ -716,6 +728,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
       componentWidth,
       fixHeader,
       fixColumn,
+      horizonScroll,
       mergedExpandIcon,
       expandableType,
       expandRowByClick,
@@ -726,10 +739,7 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
     ],
   );
 
-  const ResizeContextValue = React.useMemo(() => ({ onColumnResize }), [
-    onColumnResize,
-    transformColumns,
-  ]);
+  const ResizeContextValue = React.useMemo(() => ({ onColumnResize }), [onColumnResize]);
 
   return (
     <TableContext.Provider value={TableContextValue}>
@@ -743,6 +753,8 @@ function Table<RecordType extends DefaultRecordType>(props: TableProps<RecordTyp
 Table.Column = Column;
 
 Table.ColumnGroup = ColumnGroup;
+
+Table.Summary = FooterComponents;
 
 Table.defaultProps = {
   rowKey: 'key',

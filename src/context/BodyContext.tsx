@@ -22,6 +22,7 @@ export interface BodyContextProps<RecordType = DefaultRecordType> {
   tableLayout: TableLayout;
   fixHeader: boolean;
   fixColumn: boolean;
+  horizonScroll: boolean;
 
   indentSize: number;
   expandableType: ExpandableType;
@@ -30,7 +31,6 @@ export interface BodyContextProps<RecordType = DefaultRecordType> {
   expandIcon: RenderExpandIcon<RecordType>;
   onTriggerExpand: TriggerEventHandler<RecordType>;
   expandIconColumnIndex: number;
-  stickyOffset;
 }
 
 const BodyContext = React.createContext<BodyContextProps>(null);

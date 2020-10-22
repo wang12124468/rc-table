@@ -53,7 +53,6 @@ export interface CellProps<RecordType extends DefaultRecordType> {
   /** @private Used for `expandable` with nest tree */
   appendNode?: React.ReactNode;
   additionalProps?: React.HTMLAttributes<HTMLElement>;
-  stickyOffset?;
 }
 
 function Cell<RecordType extends DefaultRecordType>(
@@ -120,8 +119,13 @@ function Cell<RecordType extends DefaultRecordType>(
     childNode = <span className={`${cellPrefixCls}-content`}>{childNode}</span>;
   }
 
-  const { colSpan: cellColSpan, rowSpan: cellRowSpan, style: cellStyle, className: cellClassName } =
-    cellProps || {};
+  const {
+    colSpan: cellColSpan,
+    rowSpan: cellRowSpan,
+    style: cellStyle,
+    className: cellClassName,
+    ...restCellProps
+  } = cellProps || {};
   const mergedColSpan = cellColSpan !== undefined ? cellColSpan : colSpan;
   const mergedRowSpan = cellRowSpan !== undefined ? cellRowSpan : rowSpan;
 
@@ -153,8 +157,8 @@ function Cell<RecordType extends DefaultRecordType>(
   // ====================== Render ======================
   let title: string;
   if (ellipsis) {
-    if (typeof childNode === 'string') {
-      title = childNode;
+    if (typeof childNode === 'string' || typeof childNode === 'number') {
+      title = childNode.toString();
     } else if (React.isValidElement(childNode) && typeof childNode.props.children === 'string') {
       title = childNode.props.children;
     }
@@ -162,6 +166,7 @@ function Cell<RecordType extends DefaultRecordType>(
 
   const componentProps = {
     title,
+    ...restCellProps,
     ...additionalProps,
     colSpan: mergedColSpan && mergedColSpan !== 1 ? mergedColSpan : null,
     rowSpan: mergedRowSpan && mergedRowSpan !== 1 ? mergedRowSpan : null,

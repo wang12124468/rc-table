@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { ColumnsType, CellType, StickyOffsets, ColumnType, GetComponentProps } from '../interface';
+import {
+  ColumnsType,
+  CellType,
+  StickyOffsets,
+  ColumnType,
+  GetComponentProps,
+  ColumnGroupType,
+} from '../interface';
 import HeaderRow from './HeaderRow';
 import TableContext from '../context/TableContext';
 
@@ -28,8 +35,9 @@ function parseHeaderRows<RecordType>(
 
       let colSpan: number = 1;
 
-      if ('children' in column) {
-        colSpan = fillRowCells(column.children, currentColIndex, rowIndex + 1).reduce(
+      const subColumns = (column as ColumnGroupType<RecordType>).children;
+      if (subColumns && subColumns.length > 0) {
+        colSpan = fillRowCells(subColumns, currentColIndex, rowIndex + 1).reduce(
           (total, count) => total + count,
           0,
         );
@@ -86,7 +94,7 @@ function Header<RecordType>({
   flattenColumns,
   onHeaderRow,
 }: HeaderProps<RecordType>): React.ReactElement {
-  const { getComponent } = React.useContext(TableContext);
+  const { prefixCls, getComponent } = React.useContext(TableContext);
   const rows: CellType<RecordType>[][] = React.useMemo(() => parseHeaderRows(columns), [columns]);
 
   const WrapperComponent = getComponent(['header', 'wrapper'], 'thead');
@@ -94,7 +102,7 @@ function Header<RecordType>({
   const thComponent = getComponent(['header', 'cell'], 'th');
 
   return (
-    <WrapperComponent>
+    <WrapperComponent className={`${prefixCls}-thead`}>
       {rows.map((row, rowIndex) => {
         const rowNode = (
           <HeaderRow
