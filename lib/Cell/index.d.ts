@@ -20,10 +20,10 @@ export interface CellProps<RecordType extends DefaultRecordType> {
     lastFixLeft?: boolean;
     firstFixRight?: boolean;
     lastFixRight?: boolean;
+    stickyOffset?: number;
     /** @private Used for `expandable` with nest tree */
     appendNode?: React.ReactNode;
     additionalProps?: React.HTMLAttributes<HTMLElement>;
-    stickyOffset?: any;
 }
 declare const RefCell: React.ForwardRefExoticComponent<CellProps<Record<string, any>> & React.RefAttributes<any>>;
 export default RefCell;

@@ -9,6 +9,7 @@ export interface BodyContextProps<RecordType = DefaultRecordType> {
     tableLayout: TableLayout;
     fixHeader: boolean;
     fixColumn: boolean;
+    horizonScroll: boolean;
     indentSize: number;
     expandableType: ExpandableType;
     expandRowByClick: boolean;
@@ -16,7 +17,6 @@ export interface BodyContextProps<RecordType = DefaultRecordType> {
     expandIcon: RenderExpandIcon<RecordType>;
     onTriggerExpand: TriggerEventHandler<RecordType>;
     expandIconColumnIndex: number;
-    stickyOffset: any;
 }
 declare const BodyContext: React.Context<BodyContextProps<Record<string, any>>>;
 export default BodyContext;

@@ -49,6 +49,8 @@ export interface CellProps<RecordType extends DefaultRecordType> {
   firstFixRight?: boolean;
   lastFixRight?: boolean;
 
+  stickyOffset?: number;
+
   // Additional
   /** @private Used for `expandable` with nest tree */
   appendNode?: React.ReactNode;
@@ -140,12 +142,12 @@ function Cell<RecordType extends DefaultRecordType>(
 
   if (isFixLeft) {
     fixedStyle.position = 'sticky';
-    fixedStyle.left = (fixLeft + (stickyOffset || 0)) as number;
+    fixedStyle.left = fixLeft as number;
   }
   if (isFixRight) {
     fixedStyle.position = 'sticky';
 
-    fixedStyle.right = (fixRight + (stickyOffset || 0)) as number;
+    fixedStyle.right = ((fixRight as number) + (stickyOffset || 0)) as number;
   }
 
   // ====================== Align =======================

@@ -22,18 +22,17 @@ import Cell from '../Cell';
 import TableContext from '../context/TableContext';
 import BodyContext from '../context/BodyContext';
 import { getColumnsKey } from '../utils/valueUtil';
-import { getCellFixedInfo } from '../utils/fixUtil';
 import ExpandedRow from './ExpandedRow';
 
 function BodyRow(props) {
   var className = props.className,
       style = props.style,
-      stickyOffsets = props.stickyOffsets,
       record = props.record,
       index = props.index,
       rowKey = props.rowKey,
       getRowKey = props.getRowKey,
       rowExpandable = props.rowExpandable,
+      expandedKeys = props.expandedKeys,
       onRow = props.onRow,
       _props$indent = props.indent,
       indent = _props$indent === void 0 ? 0 : _props$indent,
@@ -43,11 +42,12 @@ function BodyRow(props) {
 
   var _React$useContext = React.useContext(TableContext),
       prefixCls = _React$useContext.prefixCls,
-      direction = _React$useContext.direction;
+      fixedInfoList = _React$useContext.fixedInfoList;
 
   var _React$useContext2 = React.useContext(BodyContext),
       fixHeader = _React$useContext2.fixHeader,
       fixColumn = _React$useContext2.fixColumn,
+      horizonScroll = _React$useContext2.horizonScroll,
       componentWidth = _React$useContext2.componentWidth,
       flattenColumns = _React$useContext2.flattenColumns,
       expandableType = _React$useContext2.expandableType,
@@ -58,28 +58,23 @@ function BodyRow(props) {
       indentSize = _React$useContext2.indentSize,
       expandIcon = _React$useContext2.expandIcon,
       expandedRowRender = _React$useContext2.expandedRowRender,
-      expandIconColumnIndex = _React$useContext2.expandIconColumnIndex,
-      stickyOffset = _React$useContext2.stickyOffset;
+      expandIconColumnIndex = _React$useContext2.expandIconColumnIndex;
 
   var _React$useState = React.useState(false),
       _React$useState2 = _slicedToArray(_React$useState, 2),
       expandRended = _React$useState2[0],
       setExpandRended = _React$useState2[1];
 
-  var expanded = props.expandedKeys.has(props.recordKey);
+  var expanded = expandedKeys && expandedKeys.has(props.recordKey);
   React.useEffect(function () {
     if (expanded) {
       setExpandRended(true);
     }
-  }, [expanded]); // Move to Body to enhance performance
-
-  var fixedInfoList = flattenColumns.map(function (column, colIndex) {
-    return getCellFixedInfo(colIndex, colIndex, flattenColumns, stickyOffsets, direction);
-  });
+  }, [expanded]);
   var rowSupportExpand = expandableType === 'row' && (!rowExpandable || rowExpandable(record)); // Only when row is not expandable and `children` exist in record
 
   var nestExpandable = expandableType === 'nest';
-  var hasNestChildren = childrenColumnName in record && record[childrenColumnName];
+  var hasNestChildren = childrenColumnName && record && record[childrenColumnName];
   var mergedExpandable = rowSupportExpand || nestExpandable; // =========================== onRow ===========================
 
   var additionalProps;
@@ -159,8 +154,7 @@ function BodyRow(props) {
       record: record,
       index: index,
       dataIndex: dataIndex,
-      render: render,
-      stickyOffset: stickyOffset
+      render: render
     }, fixedInfo, {
       appendNode: appendCellNode,
       additionalProps: additionalCellProps
@@ -178,6 +172,7 @@ function BodyRow(props) {
       prefixCls: prefixCls,
       fixHeader: fixHeader,
       fixColumn: fixColumn,
+      horizonScroll: horizonScroll,
       component: RowComponent,
       componentWidth: componentWidth,
       cellComponent: cellComponent,
@@ -193,6 +188,7 @@ function BodyRow(props) {
       var subKey = getRowKey(subRecord, subIndex);
       return React.createElement(BodyRow, Object.assign({}, props, {
         key: subKey,
+        rowKey: subKey,
         record: subRecord,
         recordKey: subKey,
         index: subIndex,

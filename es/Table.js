@@ -12,6 +12,8 @@ function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.it
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -70,8 +72,9 @@ import useStickyOffsets from './hooks/useStickyOffsets';
 import ColGroup from './ColGroup';
 import { getExpandableProps, getDataAndAriaProps } from './utils/legacyUtil';
 import Panel from './Panel';
-import Footer from './Footer';
-import { findAllChildrenKeys, renderExpandIcon } from './utils/expandUtil'; // Used for conditions cache
+import Footer, { FooterComponents } from './Footer';
+import { findAllChildrenKeys, renderExpandIcon } from './utils/expandUtil';
+import { getCellFixedInfo } from './utils/fixUtil'; // Used for conditions cache
 
 var EMPTY_DATA = []; // Used for customize scroll
 
@@ -148,7 +151,7 @@ function Table(props) {
     }
 
     return function (record) {
-      var key = record[rowKey];
+      var key = record && record[rowKey];
 
       if (process.env.NODE_ENV !== 'production') {
         warning(key !== undefined, 'Each record in table should have a unique `key` prop, or set `rowKey` to an unique primary key.');
@@ -191,7 +194,7 @@ function Table(props) {
 
 
     if (props.expandable && internalHooks === INTERNAL_HOOKS && props.expandable.__PARENT_RENDER_ICON__ || mergedData.some(function (record) {
-      return mergedChildrenColumnName in record;
+      return record && _typeof(record) === 'object' && mergedChildrenColumnName in record;
     })) {
       return 'nest';
     }
@@ -251,6 +254,7 @@ function Table(props) {
     expandable: !!expandedRowRender,
     expandedKeys: mergedExpandedKeys,
     getRowKey: getRowKey,
+    // https://github.com/ant-design/ant-design/issues/23894
     onTriggerExpand: onTriggerExpand,
     expandIcon: mergedExpandIcon,
     expandIconColumnIndex: expandIconColumnIndex,
@@ -293,12 +297,19 @@ function Table(props) {
 
 
   var colsKeys = getColumnsKey(flattenColumns);
-  var colWidths = colsKeys.map(function (columnKey) {
+  var pureColWidths = colsKeys.map(function (columnKey) {
     return colsWidths.get(columnKey);
   });
+  var colWidths = React.useMemo(function () {
+    return pureColWidths;
+  }, [pureColWidths.join('_')]);
   var stickyOffsets = useStickyOffsets(colWidths, flattenColumns.length, direction);
   var fixHeader = scroll && validateValue(scroll.y);
-  var fixColumn = scroll && validateValue(scroll.x);
+  var horizonScroll = scroll && validateValue(scroll.x);
+  var fixColumn = horizonScroll && flattenColumns.some(function (_ref2) {
+    var fixed = _ref2.fixed;
+    return fixed;
+  });
   var scrollXStyle;
   var scrollYStyle;
   var scrollTableStyle;
@@ -310,7 +321,7 @@ function Table(props) {
     };
   }
 
-  if (fixColumn) {
+  if (horizonScroll) {
     scrollXStyle = {
       overflowX: 'scroll'
     }; // When no vertical scrollbar, should hide it
@@ -351,9 +362,9 @@ function Table(props) {
 
   }
 
-  var onScroll = function onScroll(_ref2) {
-    var currentTarget = _ref2.currentTarget,
-        scrollLeft = _ref2.scrollLeft;
+  var onScroll = function onScroll(_ref3) {
+    var currentTarget = _ref3.currentTarget,
+        scrollLeft = _ref3.scrollLeft;
     var mergedScrollLeft = 0; // eslint-disable-next-line no-underscore-dangle
 
     var _stickyOffset = 0;
@@ -367,8 +378,7 @@ function Table(props) {
 
     if (_stickyOffset !== stickyOffset) {
       setStickyOffset(_stickyOffset);
-    } // // eslint-disable-next-line no-nested-ternary
-    // const mergedScrollLeft = customizeGetScrollLeft ? customizeGetScrollLeft(currentTarget) : (typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft);
+    } // const mergedScrollLeft = typeof scrollLeft === 'number' ? scrollLeft : currentTarget.scrollLeft;
 
 
     var compareTarget = currentTarget || EMPTY_SCROLL_TARGET;
@@ -394,21 +404,21 @@ function Table(props) {
     }
   };
 
-  var onFullTableResize = function onFullTableResize(_ref3) {
-    var width = _ref3.width;
+  var onFullTableResize = function onFullTableResize(_ref4) {
+    var width = _ref4.width;
     triggerOnScroll();
     setComponentWidth(fullTableRef.current ? fullTableRef.current.offsetWidth : width);
-  }; // Sync scroll bar when init or `fixColumn` changed
+  }; // Sync scroll bar when init or `horizonScroll` changed
 
 
   React.useEffect(function () {
     return triggerOnScroll;
   }, []);
   React.useEffect(function () {
-    if (fixColumn) {
+    if (horizonScroll) {
       triggerOnScroll();
     }
-  }, [fixColumn]); // ================== INTERNAL HOOKS ==================
+  }, [horizonScroll]); // ================== INTERNAL HOOKS ==================
 
   React.useEffect(function () {
     if (internalHooks === INTERNAL_HOOKS && internalRefs) {
@@ -423,8 +433,8 @@ function Table(props) {
       return tableLayout;
     }
 
-    if (fixHeader || fixColumn || flattenColumns.some(function (_ref4) {
-      var ellipsis = _ref4.ellipsis;
+    if (fixHeader || fixColumn || flattenColumns.some(function (_ref5) {
+      var ellipsis = _ref5.ellipsis;
       return ellipsis;
     })) {
       return 'fixed';
@@ -435,8 +445,8 @@ function Table(props) {
   var groupTableNode; // Header props
 
   var headerProps = {
-    colWidths: flattenColumns.map(function (_ref5) {
-      var width = _ref5.width;
+    colWidths: flattenColumns.map(function (_ref6) {
+      var width = _ref6.width;
       return width;
     }),
     columCount: flattenColumns.length,
@@ -458,10 +468,7 @@ function Table(props) {
 
   var bodyTable = React.createElement(Body, {
     data: mergedData,
-    measureColumnWidth:
-    /* fixHeader || fixColumn */
-    false,
-    stickyOffsets: stickyOffsets,
+    measureColumnWidth: fixHeader || horizonScroll,
     expandedKeys: mergedExpandedKeys,
     rowExpandable: rowExpandable,
     getRowKey: getRowKey,
@@ -470,8 +477,8 @@ function Table(props) {
     childrenColumnName: mergedChildrenColumnName
   });
   var bodyColGroup = React.createElement(ColGroup, {
-    colWidths: flattenColumns.map(function (_ref6) {
-      var width = _ref6.width;
+    colWidths: flattenColumns.map(function (_ref7) {
+      var width = _ref7.width;
       return width;
     }),
     columns: flattenColumns
@@ -492,8 +499,8 @@ function Table(props) {
         ref: scrollBodyRef,
         onScroll: onScroll
       });
-      headerProps.colWidths = flattenColumns.map(function (_ref7, index) {
-        var width = _ref7.width;
+      headerProps.colWidths = flattenColumns.map(function (_ref8, index) {
+        var width = _ref8.width;
         var colWidth = index === columns.length - 1 ? width - scrollbarSize : width;
 
         if (typeof colWidth === 'number' && !Number.isNaN(colWidth)) {
@@ -531,9 +538,9 @@ function Table(props) {
   } else {
     groupTableNode = React.createElement("div", {
       style: _objectSpread(_objectSpread({}, scrollXStyle), scrollYStyle),
+      className: classNames("".concat(prefixCls, "-content")),
       onScroll: onScroll,
-      ref: scrollBodyRef,
-      className: classNames("".concat(prefixCls, "-content"))
+      ref: scrollBodyRef
     }, React.createElement(TableComponent, {
       style: _objectSpread(_objectSpread({}, scrollTableStyle), {}, {
         tableLayout: mergedTableLayout
@@ -543,14 +550,17 @@ function Table(props) {
 
   var ariaProps = getDataAndAriaProps(props);
   var fullTable = React.createElement("div", Object.assign({
-    className: classNames(prefixCls, className, (_classNames = {}, _defineProperty(_classNames, "".concat(prefixCls, "-rtl"), direction === 'rtl'), _defineProperty(_classNames, "".concat(prefixCls, "-ping-left"), pingedLeft), _defineProperty(_classNames, "".concat(prefixCls, "-ping-right"), pingedRight), _defineProperty(_classNames, "".concat(prefixCls, "-layout-fixed"), tableLayout === 'fixed'), _defineProperty(_classNames, "".concat(prefixCls, "-fixed-header"), fixHeader), _defineProperty(_classNames, "".concat(prefixCls, "-fixed-column"), fixColumn), _defineProperty(_classNames, "".concat(prefixCls, "-has-fix-left"), flattenColumns[0] && flattenColumns[0].fixed), _defineProperty(_classNames, "".concat(prefixCls, "-has-fix-right"), flattenColumns[flattenColumns.length - 1] && flattenColumns[flattenColumns.length - 1].fixed === 'right'), _classNames)),
+    className: classNames(prefixCls, className, (_classNames = {}, _defineProperty(_classNames, "".concat(prefixCls, "-rtl"), direction === 'rtl'), _defineProperty(_classNames, "".concat(prefixCls, "-ping-left"), pingedLeft), _defineProperty(_classNames, "".concat(prefixCls, "-ping-right"), pingedRight), _defineProperty(_classNames, "".concat(prefixCls, "-layout-fixed"), tableLayout === 'fixed'), _defineProperty(_classNames, "".concat(prefixCls, "-fixed-header"), fixHeader), _defineProperty(_classNames, "".concat(prefixCls, "-fixed-column"), fixColumn), _defineProperty(_classNames, "".concat(prefixCls, "-scroll-horizontal"), horizonScroll), _defineProperty(_classNames, "".concat(prefixCls, "-has-fix-left"), flattenColumns[0] && flattenColumns[0].fixed), _defineProperty(_classNames, "".concat(prefixCls, "-has-fix-right"), flattenColumns[flattenColumns.length - 1] && flattenColumns[flattenColumns.length - 1].fixed === 'right'), _classNames)),
     style: style,
     id: id,
     ref: fullTableRef
   }, ariaProps), React.createElement(MemoTableContent, {
     pingLeft: pingedLeft,
     pingRight: pingedRight,
-    props: props
+    props: _objectSpread(_objectSpread({}, props), {}, {
+      stickyOffsets: stickyOffsets,
+      mergedExpandedKeys: mergedExpandedKeys
+    })
   }, title && React.createElement(Panel, {
     className: "".concat(prefixCls, "-title")
   }, title(mergedData)), React.createElement("div", {
@@ -559,7 +569,7 @@ function Table(props) {
     className: "".concat(prefixCls, "-footer")
   }, footer(mergedData))));
 
-  if (fixColumn) {
+  if (horizonScroll) {
     fullTable = React.createElement(ResizeObserver, {
       onResize: onFullTableResize
     }, fullTable);
@@ -570,9 +580,12 @@ function Table(props) {
       prefixCls: prefixCls,
       getComponent: getComponent,
       scrollbarSize: scrollbarSize,
-      direction: direction
+      direction: direction,
+      fixedInfoList: flattenColumns.map(function (_, colIndex) {
+        return getCellFixedInfo(colIndex, colIndex, flattenColumns, stickyOffsets, direction);
+      })
     };
-  }, [prefixCls, getComponent, scrollbarSize, direction]);
+  }, [prefixCls, getComponent, scrollbarSize, direction, flattenColumns, stickyOffsets, direction]);
   var BodyContextValue = React.useMemo(function () {
     return _objectSpread(_objectSpread({}, columnContext), {}, {
       tableLayout: mergedTableLayout,
@@ -581,21 +594,21 @@ function Table(props) {
       componentWidth: componentWidth,
       fixHeader: fixHeader,
       fixColumn: fixColumn,
+      horizonScroll: horizonScroll,
       expandIcon: mergedExpandIcon,
       expandableType: expandableType,
       expandRowByClick: expandRowByClick,
       expandedRowRender: expandedRowRender,
       onTriggerExpand: onTriggerExpand,
       expandIconColumnIndex: expandIconColumnIndex,
-      indentSize: indentSize,
-      stickyOffset: stickyOffset
+      indentSize: indentSize
     });
-  }, [stickyOffset, columnContext, mergedTableLayout, rowClassName, expandedRowClassName, componentWidth, fixHeader, fixColumn, mergedExpandIcon, expandableType, expandRowByClick, expandedRowRender, onTriggerExpand, expandIconColumnIndex, indentSize]);
+  }, [columnContext, mergedTableLayout, rowClassName, expandedRowClassName, componentWidth, fixHeader, fixColumn, horizonScroll, mergedExpandIcon, expandableType, expandRowByClick, expandedRowRender, onTriggerExpand, expandIconColumnIndex, indentSize]);
   var ResizeContextValue = React.useMemo(function () {
     return {
       onColumnResize: onColumnResize
     };
-  }, [onColumnResize, transformColumns]);
+  }, [onColumnResize]);
   return React.createElement(TableContext.Provider, {
     value: TableContextValue
   }, React.createElement(BodyContext.Provider, {
@@ -607,6 +620,7 @@ function Table(props) {
 
 Table.Column = Column;
 Table.ColumnGroup = ColumnGroup;
+Table.Summary = FooterComponents;
 Table.defaultProps = {
   rowKey: 'key',
   prefixCls: 'rc-table',

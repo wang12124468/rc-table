@@ -51,9 +51,10 @@ function flatColumns(columns) {
     var fixed = column.fixed; // Convert `fixed='true'` to `fixed='left'` instead
 
     var parsedFixed = fixed === true ? 'left' : fixed;
+    var subColumns = column.children;
 
-    if ('children' in column) {
-      return [].concat(_toConsumableArray(list), _toConsumableArray(flatColumns(column.children).map(function (subColum) {
+    if (subColumns && subColumns.length > 0) {
+      return [].concat(_toConsumableArray(list), _toConsumableArray(flatColumns(subColumns).map(function (subColum) {
         return _objectSpread({
           fixed: parsedFixed
         }, subColum);
@@ -129,7 +130,8 @@ function useColumns(_ref2, transformColumns) {
       expandIcon = _ref2.expandIcon,
       rowExpandable = _ref2.rowExpandable,
       expandIconColumnIndex = _ref2.expandIconColumnIndex,
-      direction = _ref2.direction;
+      direction = _ref2.direction,
+      expandRowByClick = _ref2.expandRowByClick;
   var baseColumns = React.useMemo(function () {
     return columns || convertChildrenToColumns(children);
   }, [columns, children]); // Add expand column
@@ -146,13 +148,23 @@ function useColumns(_ref2, transformColumns) {
         var rowKey = getRowKey(record, index);
         var expanded = expandedKeys.has(rowKey);
         var recordExpandable = rowExpandable ? rowExpandable(record) : true;
-        return expandIcon({
+        var icon = expandIcon({
           prefixCls: prefixCls,
           expanded: expanded,
           expandable: recordExpandable,
           record: record,
           onExpand: onTriggerExpand
         });
+
+        if (expandRowByClick) {
+          return React.createElement("span", {
+            onClick: function onClick(e) {
+              return e.stopPropagation();
+            }
+          }, icon);
+        }
+
+        return icon;
       }), _expandColumn); // Insert expand column in the target position
 
       var cloneColumns = baseColumns.slice();
